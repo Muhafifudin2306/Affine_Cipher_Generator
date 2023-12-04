@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affine Cipher Generator</title>
+    <link rel="stylesheet" href="./style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+        <div class="container">
+            <a class="navbar-brand" href="./index.html">ACG</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse d-md-flex justify-content-md-end" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item me-3">
+                        <a class="nav-link" href="./index.html">Encode App</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="./decoder.html">Decoder App</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <div class="py-5">
+                <h2>Affine Cipher Generator</h2>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="plaintext" class="form-label">Encoder Text:</label>
+                        <textarea class="form-control" id="ciphertext" rows="3" cols="50"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="keyA" class="form-label">Enter slope or key parameter 'a' (must be coprime with
+                            26):</label>
+                        <input type="number" class="form-control" id="keyA" min="1" max="25">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keyB" class="form-label">Enter intercept or key parameter 'b' (0 to 25):</label>
+                        <input type="number" class="form-control" id="keyB" min="0" max="25">
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-primary w-100 fw-bold" onclick="decrypt()">Decrypt</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="encryptedText" class="form-label">Plain Text:</label>
+                        <textarea class="form-control" id="decryptedText" rows="3" cols="50" disabled></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="numericValues" class="form-label">Numeric Values:</label>
+                        <textarea class="form-control" id="numericValues" rows="3" cols="50" disabled></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="py-5">
+                <p>Created by Muhammad Afifudin</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function decrypt() {
+            const ciphertext = document.getElementById('ciphertext').value.toUpperCase();
+            const keyA = parseInt(document.getElementById('keyA').value);
+            const keyB = parseInt(document.getElementById('keyB').value);
+            const alphabetSize = 26;
+            const modularInverse = modInverse(keyA, alphabetSize);
+
+            let decryptedText = '';
+            let numericValues = '';
+
+            for (let i = 0; i < ciphertext.length; i++) {
+                const charCode = ciphertext.charCodeAt(i);
+
+                if (charCode >= 65 && charCode <= 90) {
+                    const decryptedCharCode = (modularInverse * (charCode - 65 - keyB + alphabetSize)) % alphabetSize + 65;
+                    decryptedText += String.fromCharCode(decryptedCharCode);
+                    numericValues += ` ${String.fromCharCode(charCode)}(${charCode}) -> ${String.fromCharCode(decryptedCharCode)}(${decryptedCharCode}),`;
+                } else {
+                    decryptedText += ciphertext.charAt(i);
+                    numericValues += ` ${ciphertext.charAt(i)}(${charCode}),`;
+                }
+            }
+
+            document.getElementById('decryptedText').value = decryptedText.toLowerCase();
+            document.getElementById('numericValues').value = numericValues.slice(0, -1);
+        }
+
+        function modInverse(a, m) {
+            for (let i = 1; i < m; i++) {
+                if ((a * i) % m === 1) {
+                    return i;
+                }
+            }
+            return 1;
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
