@@ -36,7 +36,7 @@
     <main>
         <div class="container">
             <div class="py-5">
-                <h2>Affine Cipher Generator</h2>
+                <h2>Affine Cipher + Block Swapping Generator</h2>
             </div>
             <div class="row">
                 <div class="col-md-6">
@@ -63,7 +63,8 @@
                         <textarea class="form-control" id="encryptedText" rows="3" cols="50" disabled></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="numericValues" class="form-label">Numeric Values:</label>
+                        <label for="numericValues" class="form-label">Numeric Values (time run in <span
+                                id="executionTime"></span>)</label>
                         <textarea class="form-control" id="numericValues" rows="3" cols="50" disabled></textarea>
                     </div>
                 </div>
@@ -76,6 +77,8 @@
 
     <script>
         function encrypt() {
+            const start = performance.now(); // Catat waktu mulai
+
             const plaintext = document.getElementById('plaintext').value;
             const keyA = parseInt(document.getElementById('keyA').value);
             const keyB = parseInt(document.getElementById('keyB').value);
@@ -86,28 +89,35 @@
                 return;
             }
 
+            const blockSize = 4; // Ubah sesuai dengan kebutuhan
             let encryptedText = '';
             let numericValues = '';
 
-            for (let i = 0; i < plaintext.length; i++) {
-                const char = plaintext.charAt(i);
+            for (let i = 0; i < plaintext.length; i += blockSize) {
+                const block = plaintext.slice(i, i + blockSize);
+                // Pertukaran blok
+                const shuffledBlock = block.split('').reverse().join('');
 
-                if (char === ' ') {
-                    encryptedText += ' ';
-                    continue;
+                for (let j = 0; j < blockSize; j++) {
+                    const char = shuffledBlock.charAt(j);
+                    if (char === ' ') {
+                        encryptedText += ' ';
+                        continue;
+                    }
+                    const charCode = char.toLowerCase().charCodeAt(0) - 97;
+                    const encryptedCharCode = (keyA * charCode + keyB) % alphabetSize;
+                    const encryptedChar = String.fromCharCode(encryptedCharCode + 97);
+                    encryptedText += encryptedChar;
+                    numericValues += ` ${char}(${charCode}) -> ${encryptedChar}(${encryptedCharCode}),`;
                 }
-
-                const isUpperCase = /[A-Z]/.test(char);
-                const charCode = char.toLowerCase().charCodeAt(0) - 97;
-                const encryptedCharCode = (keyA * charCode + keyB) % alphabetSize;
-                const encryptedChar = String.fromCharCode(encryptedCharCode + 97);
-
-                encryptedText += isUpperCase ? encryptedChar.toUpperCase() : encryptedChar;
-                numericValues += ` ${char}(${charCode}) -> ${encryptedChar}(${encryptedCharCode}),`;
             }
+
+            const end = performance.now(); // Catat waktu berakhir
+            const executionTime = end - start; // Hitung waktu eksekusi
 
             document.getElementById('encryptedText').value = encryptedText;
             document.getElementById('numericValues').value = numericValues.slice(0, -1);
+            document.getElementById('executionTime').innerText = `${executionTime} ms`; // Tampilkan waktu di span
         }
 
         function gcd(a, b) {
@@ -118,6 +128,7 @@
             }
         }
     </script>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
