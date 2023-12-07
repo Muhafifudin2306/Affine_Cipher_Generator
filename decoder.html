@@ -36,7 +36,7 @@
     <main>
         <div class="container">
             <div class="py-5">
-                <h2>Affine Cipher Generator</h2>
+                <h2>Affine Cipher + Block Swapping Decode Generator</h2>
             </div>
             <div class="row">
                 <div class="col-md-6">
@@ -63,7 +63,8 @@
                         <textarea class="form-control" id="decryptedText" rows="3" cols="50" disabled></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="numericValues" class="form-label">Numeric Values:</label>
+                        <label for="numericValues" class="form-label">Numeric Values (time run in <span
+                                id="executionTime"></span>)</label>
                         <textarea class="form-control" id="numericValues" rows="3" cols="50" disabled></textarea>
                     </div>
                 </div>
@@ -76,30 +77,48 @@
 
     <script>
         function decrypt() {
-            const ciphertext = document.getElementById('ciphertext').value.toUpperCase();
+            const start = performance.now(); // Catat waktu mulai
+
+            const encryptedText = document.getElementById('ciphertext').value; // Ganti encryptedText menjadi ciphertext
             const keyA = parseInt(document.getElementById('keyA').value);
             const keyB = parseInt(document.getElementById('keyB').value);
             const alphabetSize = 26;
-            const modularInverse = modInverse(keyA, alphabetSize);
 
+            if (gcd(keyA, alphabetSize) !== 1) {
+                alert("'a' must be coprime with 26 (alphabet size).");
+                return;
+            }
+
+            const blockSize = 4; // Sesuaikan dengan kebutuhan, harus sama dengan blockSize pada fungsi encrypt
             let decryptedText = '';
             let numericValues = '';
 
-            for (let i = 0; i < ciphertext.length; i++) {
-                const charCode = ciphertext.charCodeAt(i);
+            for (let i = 0; i < encryptedText.length; i += blockSize) {
+                const block = encryptedText.slice(i, i + blockSize);
+                // Pertukaran blok dibalik
+                const shuffledBlock = block.split('').reverse().join('');
 
-                if (charCode >= 65 && charCode <= 90) {
-                    const decryptedCharCode = (modularInverse * (charCode - 65 - keyB + alphabetSize)) % alphabetSize + 65;
-                    decryptedText += String.fromCharCode(decryptedCharCode);
-                    numericValues += ` ${String.fromCharCode(charCode)}(${charCode}) -> ${String.fromCharCode(decryptedCharCode)}(${decryptedCharCode}),`;
-                } else {
-                    decryptedText += ciphertext.charAt(i);
-                    numericValues += ` ${ciphertext.charAt(i)}(${charCode}),`;
+                for (let j = 0; j < blockSize; j++) {
+                    const char = shuffledBlock.charAt(j);
+                    if (char === ' ') {
+                        decryptedText += ' ';
+                        continue;
+                    }
+                    const charCode = char.toLowerCase().charCodeAt(0) - 97;
+                    // Perhitungan invers modulo untuk mendapatkan nilai asli
+                    const decryptedCharCode = modInverse(keyA, alphabetSize) * (charCode - keyB + alphabetSize) % alphabetSize;
+                    const decryptedChar = String.fromCharCode(decryptedCharCode + 97);
+                    decryptedText += decryptedChar;
+                    numericValues += ` ${char}(${charCode}) -> ${decryptedChar}(${decryptedCharCode}),`;
                 }
             }
 
-            document.getElementById('decryptedText').value = decryptedText.toLowerCase();
+            const end = performance.now(); // Catat waktu berakhir
+            const executionTime = end - start; // Hitung waktu eksekusi
+
+            document.getElementById('decryptedText').value = decryptedText;
             document.getElementById('numericValues').value = numericValues.slice(0, -1);
+            document.getElementById('executionTime').innerText = `${executionTime} ms`; // Tampilkan waktu di span
         }
 
         function modInverse(a, m) {
@@ -109,6 +128,13 @@
                 }
             }
             return 1;
+        }
+        function gcd(a, b) {
+            if (b === 0) {
+                return a;
+            } else {
+                return gcd(b, a % b);
+            }
         }
     </script>
 
